@@ -1012,8 +1012,8 @@ async function uploadFiles() {
 	}
 }
 
-async function post(ev?: PointerEvent) {
-	if (ev != null) {
+async function post(ev?: PointerEvent, acceptedSensitiveDemotion = false) {
+	if (ev) {
 		const el = (ev.currentTarget ?? ev.target) as HTMLElement | null;
 
 		if (el && prefer.s.animation) {
@@ -1091,6 +1091,7 @@ async function post(ev?: PointerEvent) {
 		visibility: actualVisibility.value,
 		visibleUserIds: actualVisibility.value === 'specified' ? visibleUsers.value.map(u => u.id) : undefined,
 		reactionAcceptance: reactionAcceptance.value,
+		acceptSensitiveDemotion: acceptedSensitiveDemotion,
 	};
 
 	if (withHashtags.value && hashtags.value && hashtags.value.trim() !== '') {
@@ -1203,8 +1204,22 @@ async function post(ev?: PointerEvent) {
 				misskeyApi('notes/drafts/delete', { draftId: serverDraftId.value });
 			}
 		});
-	}).catch(err => {
+	}).catch(async (err: any) => {
 		posting.value = false;
+
+		const isApiError = err && typeof err === 'object' && ('id' in err || 'code' in err);
+
+		if (isApiError && (err.id === '80d1dae8-46c5-408a-b856-bbba0f0321fb' || err.code === 'CONTAINS_SENSITIVE_WORDS')) {
+			const { canceled } = await os.confirm({
+				type: 'warning',
+				text: 'センシティブワードが含まれていますが、このまま投稿しますか？',
+			});
+			if (!canceled) {
+				post(undefined, true);
+			}
+			return;
+		}
+
 		os.alert({
 			type: 'error',
 			text: err.message + '\n' + (err as any).id,

@@ -180,6 +180,7 @@ type Option = {
 	cw?: string | null;
 	visibility?: string;
 	visibleUsers?: MinimumUser[] | null;
+	acceptSensitiveDemotion?: boolean;
 	channel?: MiChannel | null;
 	apMentions?: MinimumUser[] | null;
 	apHashtags?: string[] | null;
@@ -292,6 +293,7 @@ export class NoteCreateService implements OnApplicationShutdown {
 		localOnly: boolean;
 		reactionAcceptance: MiNote['reactionAcceptance'];
 		poll: IPoll | null;
+		acceptSensitiveDemotion?: boolean;
 		apMentions?: MinimumUser[] | null;
 		apHashtags?: string[] | null;
 		apEmojis?: string[] | null;
@@ -431,6 +433,7 @@ export class NoteCreateService implements OnApplicationShutdown {
 			visibility: data.visibility,
 			visibleUsers,
 			channel,
+			acceptSensitiveDemotion: data.acceptSensitiveDemotion,
 			apMentions: data.apMentions,
 			apHashtags: data.apHashtags,
 			apEmojis: data.apEmojis,
@@ -471,6 +474,9 @@ export class NoteCreateService implements OnApplicationShutdown {
 		if (data.visibility === 'public' && data.channel == null) {
 			const sensitiveWords = this.meta.sensitiveWords;
 			if (this.utilityService.isKeyWordIncluded(data.cw ?? data.text ?? '', sensitiveWords)) {
+				if (!data.acceptSensitiveDemotion) {
+					throw new IdentifiableError('80d1dae8-46c5-408a-b856-bbba0f0321fb', 'Cannot post because it contains sensitive words, unless acceptSensitiveDemotion is true.');
+				}
 				data.visibility = 'home';
 			} else if ((await this.roleService.getUserPolicies(user.id)).canPublicNote === false) {
 				data.visibility = 'home';

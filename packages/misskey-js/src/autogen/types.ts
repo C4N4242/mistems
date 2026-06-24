@@ -29525,6 +29525,8 @@ export interface operations {
                     renoteId?: string | null;
                     /** Format: misskey:id */
                     channelId?: string | null;
+                    /** @default false */
+                    acceptSensitiveDemotion?: boolean;
                     text?: string | null;
                     fileIds?: string[];
                     mediaIds?: string[];

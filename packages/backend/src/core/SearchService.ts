@@ -224,25 +224,22 @@ export class SearchService {
 
 		if (this.config.fulltextSearch?.provider === 'sqlPgroonga') {
 			// pgroonga
-			if(opts.searchFrom === 'textWithCw'){
+			if (opts.searchFrom === 'textWithCw') {
 				// textWithCwオプション 
 				query.andWhere('(coalesce(note.cw, \'\') || note.text) &@~ :q', { q });
-			}else {
+			} else {
 				// 通常検索
 				query.andWhere('note.text &@~ :q', { q });
 			}
-
-
 		} else {
 			// Postgresql 標準
-			if(opts.searchFrom === 'textWithCw'){
+			if (opts.searchFrom === 'textWithCw') {
 				// textWithCwオプション 
 				query.andWhere('LOWER((coalesce(note.cw, \'\') || note.text)) LIKE :q', { q: `%${ sqlLikeEscape(q.toLowerCase()) }%` });
-			}else {
+			} else {
 				// 通常検索
 				query.andWhere('LOWER(note.text) LIKE :q', { q: `%${ sqlLikeEscape(q.toLowerCase()) }%` });
 			}
-			
 		} 
 
 		if (opts.host) {
