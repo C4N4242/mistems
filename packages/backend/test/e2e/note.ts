@@ -657,7 +657,42 @@ describe('Note', () => {
 			assert.strictEqual(res.status, 400);
 		});
 
-		test('センシティブな投稿はhomeになる (単語指定)', async () => {
+		test('acceptSensitiveDemotionが未指定の場合、センシティブワードを含む投稿はエラーになる (単語指定)', async () => {
+			const sensitive = await api('admin/update-meta', {
+				sensitiveWords: [
+					'test',
+				],
+			}, root);
+
+			assert.strictEqual(sensitive.status, 204);
+
+			const note1 = await api('notes/create', {
+				text: 'hogetesthuge',
+			}, alice);
+
+			assert.strictEqual(note1.status, 400);
+			assert.strictEqual(castAsError(note1.body).error.code, 'CONTAINS_SENSITIVE_WORDS');
+		});
+
+		test('acceptSensitiveDemotionがfalseの場合、センシティブワードを含む投稿はエラーになる (単語指定)', async () => {
+			const sensitive = await api('admin/update-meta', {
+				sensitiveWords: [
+					'test',
+				],
+			}, root);
+
+			assert.strictEqual(sensitive.status, 204);
+
+			const note1 = await api('notes/create', {
+				text: 'hogetesthuge',
+				acceptSensitiveDemotion: false,
+			}, alice);
+
+			assert.strictEqual(note1.status, 400);
+			assert.strictEqual(castAsError(note1.body).error.code, 'CONTAINS_SENSITIVE_WORDS');
+		});
+
+		test('acceptSensitiveDemotionがtrueの場合、センシティブワードを含む投稿はhomeになる (単語指定)', async () => {
 			const sensitive = await api('admin/update-meta', {
 				sensitiveWords: [
 					'test',
@@ -670,13 +705,14 @@ describe('Note', () => {
 
 			const note1 = await api('notes/create', {
 				text: 'hogetesthuge',
+				acceptSensitiveDemotion: true,
 			}, alice);
 
 			assert.strictEqual(note1.status, 200);
 			assert.strictEqual(note1.body.createdNote.visibility, 'home');
 		});
 
-		test('センシティブな投稿はhomeになる (正規表現)', async () => {
+		test('センシティブワードを含む投稿はエラーになる (正規表現)', async () => {
 			const sensitive = await api('admin/update-meta', {
 				sensitiveWords: [
 					'/Test/i',
@@ -689,11 +725,11 @@ describe('Note', () => {
 				text: 'hogetesthuge',
 			}, alice);
 
-			assert.strictEqual(note2.status, 200);
-			assert.strictEqual(note2.body.createdNote.visibility, 'home');
+			console.log(note2.body); assert.strictEqual(note2.status, 400);
+			assert.strictEqual(castAsError(note2.body).error.code, 'CONTAINS_SENSITIVE_WORDS');
 		});
 
-		test('センシティブな投稿はhomeになる (スペースアンド)', async () => {
+		test('センシティブワードを含む投稿はエラーになる (スペースアンド)', async () => {
 			const sensitive = await api('admin/update-meta', {
 				sensitiveWords: [
 					'Test hoge',
@@ -706,8 +742,9 @@ describe('Note', () => {
 				text: 'hogeTesthuge',
 			}, alice);
 
-			assert.strictEqual(note2.status, 200);
-			assert.strictEqual(note2.body.createdNote.visibility, 'home');
+			console.log("SENSITIVE ERROR:", note2.body);
+			assert.strictEqual(note2.status, 400);
+			assert.strictEqual(castAsError(note2.body).error.code, 'CONTAINS_SENSITIVE_WORDS');
 		});
 
 		test('禁止ワードを含む投稿はエラーになる (単語指定)', async () => {
@@ -715,6 +752,7 @@ describe('Note', () => {
 				prohibitedWords: [
 					'test',
 				],
+				sensitiveWords: [],
 			}, root);
 
 			assert.strictEqual(prohibited.status, 204);
@@ -742,7 +780,7 @@ describe('Note', () => {
 				text: 'hogetesthuge',
 			}, alice);
 
-			assert.strictEqual(note2.status, 400);
+			console.log(note2.body); assert.strictEqual(note2.status, 400);
 			assert.strictEqual(castAsError(note2.body).error.code, 'CONTAINS_PROHIBITED_WORDS');
 		});
 
@@ -759,7 +797,7 @@ describe('Note', () => {
 				text: 'hogeTesthuge',
 			}, alice);
 
-			assert.strictEqual(note2.status, 400);
+			console.log(note2.body); assert.strictEqual(note2.status, 400);
 			assert.strictEqual(castAsError(note2.body).error.code, 'CONTAINS_PROHIBITED_WORDS');
 		});
 

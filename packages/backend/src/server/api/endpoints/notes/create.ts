@@ -123,6 +123,12 @@ export const meta = {
 			code: 'CONTAINS_TOO_MANY_MENTIONS',
 			id: '4de0363a-3046-481b-9b0f-feff3e211025',
 		},
+
+		containsSensitiveWords: {
+			message: 'Cannot post because it contains sensitive words, unless acceptSensitiveDemotion is true.',
+			code: 'CONTAINS_SENSITIVE_WORDS',
+			id: '80d1dae8-46c5-408a-b856-bbba0f0321fb',
+		},
 	},
 } as const;
 
@@ -142,6 +148,7 @@ export const paramDef = {
 		replyId: { type: 'string', format: 'misskey:id', nullable: true },
 		renoteId: { type: 'string', format: 'misskey:id', nullable: true },
 		channelId: { type: 'string', format: 'misskey:id', nullable: true },
+		acceptSensitiveDemotion: { type: 'boolean', default: false },
 
 		// anyOf内にバリデーションを書いても最初の一つしかチェックされない
 		// See https://github.com/misskey-dev/misskey/pull/10082
@@ -283,9 +290,11 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 						throw new ApiError(meta.errors.cannotCreateAlreadyExpiredPoll);
 					} else if (err.id === 'bfa3905b-25f5-4894-b430-da331a490e4b') {
 						throw new ApiError(meta.errors.noSuchChannel);
+					} else if (err.id === '80d1dae8-46c5-408a-b856-bbba0f0321fb') {
+						throw new ApiError(meta.errors.containsSensitiveWords);
 					}
 				}
-				throw err;
+				console.error(err); console.error(err); throw err;
 			}
 		});
 	}
