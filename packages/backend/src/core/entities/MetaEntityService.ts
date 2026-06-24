@@ -21,7 +21,7 @@ type HighlightExtention = {
 	highlightMidPopularityThreshold: number,
 	highlightHighPopularityThreshold: number,
 	highlightExcludeEmojis: string
-}
+};
 
 @Injectable()
 export class MetaEntityService {

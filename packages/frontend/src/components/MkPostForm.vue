@@ -1204,7 +1204,7 @@ async function post(ev?: PointerEvent, acceptedSensitiveDemotion = false) {
 				misskeyApi('notes/drafts/delete', { draftId: serverDraftId.value });
 			}
 		});
-	}).catch(async (err: unknown) => {
+	}).catch(async (err: any) => {
 		posting.value = false;
 
 		const isApiError = err && typeof err === 'object' && ('id' in err || 'code' in err);
